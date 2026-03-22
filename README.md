@@ -32,8 +32,7 @@ atlas-ui/
 │   └── main.jsx
 ├── index.html
 ├── package.json
-└── vite.confi
-g.js
+└── vite.config.js
 ```
 
 # ⚙️ Manager Structure (Java)
