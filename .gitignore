@@ -85,3 +85,80 @@ atlas/**/*.class
 atlas/**/*.jar
 atlas/**/*.war
 atlas/**/*.ear
+
+# ==========================================
+# 🌐 GLOBAL OS & IDE GARBAGE
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# ==========================================
+# 🔐 ENVIRONMENT VARIABLES & SECRETS
+# ==========================================
+.env
+.env.*
+*.local
+
+# ==========================================
+# 📝 LOGS & CACHE
+# ==========================================
+*.log
+logs/
+.cache/
+tmp/
+temp/
+
+# ==========================================
+# ⚛️ FRONTEND: atlas-ui (React / Vite)
+# ==========================================
+atlas-ui/node_modules/
+atlas-ui/dist/
+atlas-ui/dist-ssr/
+atlas-ui/npm-debug.log*
+atlas-ui/yarn-debug.log*
+atlas-ui/yarn-error.log*
+
+# ==========================================
+# ☕ MANAGER: atlas-manager (Java / Spring Boot)
+# ==========================================
+atlas-manager/target/
+atlas-manager/out/
+atlas-manager/build/
+atlas-manager/.mvn/wrapper/maven-wrapper.jar
+
+# Compiled Java artifacts
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# 🛑 CRITICAL: Local Databases & Vaults (DO NOT COMMIT)
+# Prevents committing locked DBs and personal PDF resumes
+atlas-manager/src/main/resources/data/*.db
+atlas-manager/src/main/resources/data/*.json
+atlas-manager/src/main/resources/data/vault/
+
+# ==========================================
+# 🐍 WORKER: atlas-worker (Python / FastAPI)
+# ==========================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+atlas-worker/venv/
+atlas-worker/env/
+atlas-worker/.venv/
+
+# Tooling / Testing
+atlas-worker/.pytest_cache/
+atlas-worker/.mypy_cache/
+atlas-worker/.coverage

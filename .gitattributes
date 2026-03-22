@@ -1,0 +1,4 @@
+# Force LF line endings for Linux/Mac shell scripts so Windows doesn't break them
+*.sh text eol=lf
+*mvnw text eol=lf
+*.cmd text eol=crlf

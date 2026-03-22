@@ -1,0 +1,154 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0" version="29.6.3">
+  <diagram name="Page-1" id="T3dbcB8DD70Hs_eLQEGy">
+    <mxGraphModel dx="1303" dy="704" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-26" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="340" width="560" x="180" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="FRONTEND (REACT)" vertex="1">
+          <mxGeometry height="60" width="120" x="300" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-41" edge="1" parent="1" source="Pb0Ys0U6Qqj7o-JPpGit-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="Pb0Ys0U6Qqj7o-JPpGit-35">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="140" y="600" />
+              <mxPoint x="140" y="1100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="260" width="260" x="230" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-3" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="JAVA BACKEND" vertex="1">
+          <mxGeometry height="30" width="110" x="305" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="INPUT GUARDRAIL&lt;br&gt;(CHECK INPUT)" vertex="1">
+          <mxGeometry height="40" width="220" x="250" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;QUERY EXPANDER&amp;nbsp;&lt;/div&gt;&lt;div&gt;(GATHER CONTEXT)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="220" x="250" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-8" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="90" width="150" x="540" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-6" parent="Pb0Ys0U6Qqj7o-JPpGit-8" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" value="" vertex="1">
+          <mxGeometry height="90" width="150" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-7" parent="Pb0Ys0U6Qqj7o-JPpGit-8" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="FILE VAULT" vertex="1">
+          <mxGeometry height="30" width="85" x="32.5" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-12" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;TASK DECOMPOSER&lt;/div&gt;&lt;div&gt;(BREAK TASKS)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="220" x="250" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-16" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="140" width="140" x="210" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-14" parent="Pb0Ys0U6Qqj7o-JPpGit-16" style="whiteSpace=wrap;html=1;aspect=fixed;" value="FORM FILLING" vertex="1">
+          <mxGeometry height="140" width="140" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-15" parent="Pb0Ys0U6Qqj7o-JPpGit-16" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="AGENT 1" vertex="1">
+          <mxGeometry height="30" width="60" x="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-17" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="140" width="140" x="390" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-18" parent="Pb0Ys0U6Qqj7o-JPpGit-17" style="whiteSpace=wrap;html=1;aspect=fixed;" value="JOB RESEARCHER" vertex="1">
+          <mxGeometry height="140" width="140" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-19" parent="Pb0Ys0U6Qqj7o-JPpGit-17" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="AGENT 2" vertex="1">
+          <mxGeometry height="30" width="60" x="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-20" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="140" width="140" x="570" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-21" parent="Pb0Ys0U6Qqj7o-JPpGit-20" style="whiteSpace=wrap;html=1;aspect=fixed;" value="YOUTUBE&lt;br&gt;VIDEO DATA&lt;br&gt;EXTRACTOR" vertex="1">
+          <mxGeometry height="140" width="140" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-22" parent="Pb0Ys0U6Qqj7o-JPpGit-20" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;div&gt;AGENT 3&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-27" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="PYTHON LAYER" vertex="1">
+          <mxGeometry height="30" width="100" x="410" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-29" edge="1" parent="1" style="endArrow=classic;startArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="400" y="370" as="sourcePoint" />
+            <mxPoint x="400" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-38" connectable="0" parent="Pb0Ys0U6Qqj7o-JPpGit-29" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Input/Outputs" vertex="1">
+          <mxGeometry relative="1" x="0.0267" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-30" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.278;entryY=1.021;entryDx=0;entryDy=0;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryPerimeter=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="320" y="370" as="sourcePoint" />
+            <mxPoint x="320.8599999999999" y="321.26" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-39" connectable="0" parent="Pb0Ys0U6Qqj7o-JPpGit-30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Terminal Logs" vertex="1">
+          <mxGeometry relative="1" x="-0.0678" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-31" edge="1" parent="1" style="endArrow=classic;startArrow=classic;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="540" y="409.44" as="sourcePoint" />
+            <mxPoint x="490" y="409.44" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-34" edge="1" parent="1" style="endArrow=classic;startArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="359.62" y="680" as="sourcePoint" />
+            <mxPoint x="359.62" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-35" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="OLLAMA SERVER" vertex="1">
+          <mxGeometry height="60" width="120" x="400" y="1070" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-36" edge="1" parent="1" style="endArrow=classic;startArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="459.38" y="1070" as="sourcePoint" />
+            <mxPoint x="459.38" y="1020" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-42" edge="1" parent="1" style="endArrow=classic;startArrow=classic;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="540" y="509.44" as="sourcePoint" />
+            <mxPoint x="490" y="509.44" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-43" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="90" width="150" x="540" y="460" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-44" parent="Pb0Ys0U6Qqj7o-JPpGit-43" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" value="" vertex="1">
+          <mxGeometry height="90" width="150" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-45" parent="Pb0Ys0U6Qqj7o-JPpGit-43" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="PREFERENCE DB" vertex="1">
+          <mxGeometry height="30" width="85" x="32.5" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-46" edge="1" parent="1" style="endArrow=classic;startArrow=classic;html=1;rounded=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="540" y="609.44" as="sourcePoint" />
+            <mxPoint x="490" y="609.44" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-47" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="90" width="150" x="540" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-48" parent="Pb0Ys0U6Qqj7o-JPpGit-47" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" value="" vertex="1">
+          <mxGeometry height="90" width="150" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-49" parent="Pb0Ys0U6Qqj7o-JPpGit-47" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="CHAT HISTORY" vertex="1">
+          <mxGeometry height="30" width="85" x="32.5" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="Pb0Ys0U6Qqj7o-JPpGit-50" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="PLAYWRIGHT (BROWSER SESSION + TOOL CONTROL)" vertex="1">
+          <mxGeometry height="100" width="500" x="210" y="890" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

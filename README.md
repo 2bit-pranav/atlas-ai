@@ -1,5 +1,6 @@
 # atlas-ai
-A fully local browser AI agent to automate browser workflows. 
+
+A fully local browser AI agent to automate browser workflows.
 
 # 📂 Root Structure:
 
@@ -36,6 +37,7 @@ atlas-ui/
 ```
 
 # ⚙️ Manager Structure (Java)
+
 ```text
 atlas-manager/
 ├── pom.xml                 # Dependencies (Spring Web, WebSocket, LangChain4j)
@@ -67,6 +69,7 @@ atlas-manager/
 ```
 
 # 🤖 Worker Structure (Python)
+
 ```text
 atlas-worker/
 ├── requirements.txt          # fastapi, uvicorn, langchain, playwright
@@ -90,4 +93,6 @@ atlas-worker/
         └── response_models.py# Formats the outgoing JSON back to Java
 ```
 
+# 📝 Architecture
 
+![High Level Architecture](./assets/High_Lvl_Arch.png)
