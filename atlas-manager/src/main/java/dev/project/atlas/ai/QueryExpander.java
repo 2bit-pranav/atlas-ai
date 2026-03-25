@@ -1,5 +1,6 @@
 package dev.project.atlas.ai;
 
+import dev.project.atlas.model.ContextPayload;
 import dev.project.atlas.service.MemoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -7,29 +8,15 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class QueryExpander {
+
     private final MemoryService memoryService;
 
-    public String buildExpandedPayload(String agentSelection, String rawQuery) {
-        System.out.println("Expanding query for agent: " + agentSelection);
+    // Notice we return the object now, not a String
+    public ContextPayload buildExpandedPayload(String agentSelection, String rawPrompt) {
 
-        // 1. gather context
         String userFacts = memoryService.getFacts();
-        String vaultData = memoryService.searchVault(rawQuery);
+        String vaultData = memoryService.searchVault(rawPrompt);
 
-        // 2. construct master prompt
-        return """
-               [SYSTEM INSTRUCTION]
-               You are Atlas, executing the %s protocol. 
-               Achieve the user's goal using your available browser tools.
-               
-               [USER GOAL]
-               %s
-               
-               [USER CONTEXT & PREFERENCES]
-               %s
-               
-               [RELEVANT VAULT DOCUMENTS]
-               %s
-               """.formatted(agentSelection, rawQuery, userFacts, vaultData);
+        return new ContextPayload(agentSelection, rawPrompt, userFacts, vaultData);
     }
 }

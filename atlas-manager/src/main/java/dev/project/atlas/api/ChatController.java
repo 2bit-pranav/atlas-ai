@@ -3,9 +3,7 @@ package dev.project.atlas.api;
 import dev.project.atlas.ai.InputGuardrail;
 import dev.project.atlas.ai.QueryExpander;
 import dev.project.atlas.ai.TaskDecomposer;
-import dev.project.atlas.model.ChatRequest;
-import dev.project.atlas.model.TaskPlan;
-import dev.project.atlas.model.TaskStep;
+import dev.project.atlas.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -24,42 +22,30 @@ public class ChatController {
 
     @MessageMapping("/chat.send")
     public void handleChatMessage(ChatRequest chatRequest) {
-        // System.out.println("Incoming message: " + message);
-        // return "Atlas echo: " + message;
+        // 1. use guardrail
         Double score = inputGuardrail.evaluateResponse(chatRequest.prompt());
         System.out.println("Guardrail score: " + score);
 
-        // evaluate the request
         if (score < 0.5) {
             messagingTemplate.convertAndSend("/topic/chat-stream",
                     "Atlas: Request blocked. Score (" + score + ") is too low for web execution.");
             return;
         }
 
-        // display the score
-        // String responseMessage = "Score " + score + " accepted. Initializing " + chatRequest.agentSelection() + "...";
-        // messagingTemplate.convertAndSend("/topic/chat-stream", "Atlas: " + responseMessage);
+        // 2. query expansion
+        ContextPayload payload = queryExpander.buildExpandedPayload(chatRequest.agentSelection(), chatRequest.prompt());
+        System.out.println(" ==== Expanded payload ==== \n" + payload);
+        messagingTemplate.convertAndSend("/topic/chat-stream", " ==== Expanded payload ==== \n" + payload);
 
-        // query expansion
-        String expandedPayload = queryExpander.buildExpandedPayload(chatRequest.agentSelection(), chatRequest.prompt());
-        // print expanded payload
-        String finalPayload = "Score: " + score + " accepted. Initializing " + chatRequest.agentSelection() + "...\n\n" + expandedPayload;
-        System.out.println("\n ==== Expanded Payload ==== ");
-        System.out.println(finalPayload);
-        System.out.println(" ==== ================ ==== ");
+        // 3. decompose into tasks
+        TaskPlan plan = taskDecomposer.decomposeToPlan(payload.toString());
+        System.out.println(" ==== Task plan ==== \n" + plan.toString());
+        messagingTemplate.convertAndSend("/topic/chat-stream", " ==== Task plan ==== \n" + plan.toString());
 
-        messagingTemplate.convertAndSend("/topic/chat-stream", finalPayload);
+        // 4. initialize workflow state
+        WorkFlow activeWorkFlow = new WorkFlow(chatRequest.agentSelection(), plan);
+        System.out.println("Initialized WorkFlow ID: " + activeWorkFlow.getWorkflowId());
 
-        // task decomposition
-        TaskPlan plan = taskDecomposer.decomposeToPlan(expandedPayload);
-        List<TaskStep> tasks = plan.steps();
-        String finalTaskList = "Decomposed into " + tasks.size() + " steps:\n\n" + tasks.stream()
-                .map(TaskStep::toString)
-                .reduce("", (a, b) -> a + b + "\n");
-        System.out.println("\n ==== Decomposed Tasks ==== ");
-        System.out.println(finalTaskList);
-        System.out.println(" ==== ================== ==== ");
-
-        messagingTemplate.convertAndSend("/topic/chat-stream", finalTaskList);
+        // 5. send to python...
     }
 }
