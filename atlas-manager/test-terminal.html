@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Atlas WebSocket Terminal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+    <style>
+      body {
+        background: #1e1e1e;
+        color: #00ff00;
+        font-family: monospace;
+        padding: 20px;
+      }
+      input, select, button {
+        background: #333;
+        color: #00ff00;
+        border: 1px solid #00ff00;
+        padding: 8px;
+        font-family: monospace;
+        font-size: 14px;
+      }
+      input:focus, select:focus {
+        outline: none;
+        background: #444;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Atlas Live Terminal</h2>
+
+    <div style="margin-bottom: 15px;">
+      <label for="agentSelect" style="margin-right: 10px;">Target Agent:</label>
+      <select id="agentSelect">
+        <option value="JOB_RESEARCH">JOB_RESEARCH</option>
+        <option value="YT_EXTRACTION">YT_EXTRACTION</option>
+        <option value="FORM_FILL">FORM_FILL</option>
+        <option value="GENERAL_CHAT">GENERAL_CHAT</option>
+      </select>
+    </div>
+
+    <input
+      id="msg"
+      type="text"
+      placeholder="Type a message..."
+      style="width: 400px"
+      onkeypress="if (event.key === 'Enter') sendMessage();"
+    />
+    <button onclick="sendMessage()" style="cursor: pointer;">Send</button>
+
+    <div id="logs" style="margin-top: 20px; white-space: pre-wrap"></div>
+
+    <script>
+      const stompClient = new StompJs.Client({
+        brokerURL: "ws://localhost:8080/atlas-ws",
+        onConnect: () => {
+          log("🟢 CONNECTED to Spring Boot!");
+
+          // Subscribe to the chat topic
+          stompClient.subscribe("/topic/chat-stream", (message) => {
+            log("🤖 ATLAS: " + message.body);
+          });
+        },
+        onStompError: (frame) => {
+          log("🔴 ERROR: " + frame.headers["message"]);
+        },
+      });
+
+      // Start the connection
+      stompClient.activate();
+
+      function sendMessage() {
+        const textInput = document.getElementById("msg");
+        const text = textInput.value.trim();
+        if (!text) return; // Don't send empty messages
+
+        const selectedAgent = document.getElementById("agentSelect").value;
+        log("\n👤 YOU [" + selectedAgent + "]: " + text);
+
+        // 1. Construct the payload (Using 'prompt' to match your Java model)
+        const payload = {
+          agentSelection: selectedAgent,
+          prompt: text, 
+        };
+
+        // 2. Send it with the critical Content-Type header
+        stompClient.publish({
+          destination: "/app/chat.send",
+          body: JSON.stringify(payload),
+          headers: {
+            "content-type": "application/json" // Tells Spring Boot to use Jackson
+          }
+        });
+
+        textInput.value = "";
+      }
+
+      function log(message) {
+        const logsDiv = document.getElementById("logs");
+        logsDiv.innerText += message + "\n";
+        // Auto-scroll to the bottom of the page as new messages arrive
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+    </script>
+  </body>
+</html>
