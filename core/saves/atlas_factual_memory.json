@@ -1,0 +1,14 @@
+{
+    "name": "pranav",
+    "location": "mumbai",
+    "occupation": "engineering student",
+    "interests": [
+        "counter strike",
+        "call of duty"
+    ],
+    "tech_stack": [
+        "java",
+        "springboot",
+        "c++"
+    ]
+}
