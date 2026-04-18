@@ -1,164 +1,148 @@
-# Compiled class file
-*.class
+# ==================================================
+# ATLAS-AI MONOREPO .gitignore
+# Structure:
+# atlas-ai/
+# ├── ui       -> React + TypeScript
+# ├── manager  -> Java Spring Boot
+# └── core     -> FastAPI + LangGraph
+# ==================================================
 
-# Log file
-*.log
-
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-
-# End of https://mrkandreev.name/snippets/gitignore-generator/#Java
-
-# =========================
-# IDE garbage (IntelliJ / VS Code)
-# =========================
-atlas/.idea/
-atlas/.vscode/
-atlas/*.iml
-atlas/*.ipr
-atlas/*.iws
-
-# =========================
-# Maven / Java build output
-# =========================
-atlas/target/
-atlas/out/
-atlas/build/
-atlas/.mvn/wrapper/maven-wrapper.jar
-
-# =========================
-# Logs
-# =========================
-atlas/*.log
-atlas/logs/
-atlas/**/logs/
-
-# =========================
-# OS-level nonsense
-# =========================
-atlas/.DS_Store
-atlas/Thumbs.db
-atlas/desktop.ini
-
-# =========================
-# Temporary / cache files
-# =========================
-atlas/tmp/
-atlas/temp/
-atlas/.cache/
-atlas/**/.cache/
-
-# =========================
-# Environment / secrets
-# =========================
-atlas/.env
-atlas/.env.*
-atlas/**/.env
-atlas/**/.env.*
-
-# =========================
-# Node / tooling (if any frontend sneaks in later)
-# =========================
-atlas/node_modules/
-atlas/npm-debug.log*
-atlas/yarn-error.log*
-
-# =========================
-# Compiled artifacts (just in case)
-# =========================
-atlas/**/*.class
-atlas/**/*.jar
-atlas/**/*.war
-atlas/**/*.ear
-
-# ==========================================
-# 🌐 GLOBAL OS & IDE GARBAGE
-# ==========================================
+# ==================================================
+# 🌍 GLOBAL OS / EDITOR GARBAGE
+# ==================================================
 .DS_Store
 Thumbs.db
 desktop.ini
+
 .idea/
 .vscode/
 *.iml
 *.ipr
 *.iws
 
-# ==========================================
-# 🔐 ENVIRONMENT VARIABLES & SECRETS
-# ==========================================
+# Vim / misc editor junk
+*.swp
+*.swo
+*~
+
+# ==================================================
+# 🔐 ENV / SECRETS
+# ==================================================
 .env
 .env.*
 *.local
+*.secret
+secrets.json
 
-# ==========================================
-# 📝 LOGS & CACHE
-# ==========================================
+# ==================================================
+# 📝 LOGS / TEMP / CACHE
+# ==================================================
 *.log
 logs/
-.cache/
 tmp/
 temp/
+.cache/
 
-# ==========================================
-# ⚛️ FRONTEND: atlas-ui (React / Vite)
-# ==========================================
-atlas-ui/node_modules/
-atlas-ui/dist/
-atlas-ui/dist-ssr/
-atlas-ui/npm-debug.log*
-atlas-ui/yarn-debug.log*
-atlas-ui/yarn-error.log*
+# ==================================================
+# ⚛️ UI (React + TypeScript / Vite)
+# Folder: /ui
+# ==================================================
+ui/node_modules/
+ui/dist/
+ui/build/
+ui/.vite/
+ui/.cache/
 
-# ==========================================
-# ☕ MANAGER: atlas-manager (Java / Spring Boot)
-# ==========================================
-atlas-manager/target/
-atlas-manager/out/
-atlas-manager/build/
-atlas-manager/.mvn/wrapper/maven-wrapper.jar
+ui/npm-debug.log*
+ui/yarn-debug.log*
+ui/yarn-error.log*
+ui/pnpm-debug.log*
 
-# Compiled Java artifacts
+# Test coverage
+ui/coverage/
+
+# ==================================================
+# ☕ MANAGER (Java Spring Boot / Maven)
+# Folder: /manager
+# ==================================================
+manager/target/
+manager/out/
+manager/build/
+
+# Maven wrapper binary (optional)
+manager/.mvn/wrapper/maven-wrapper.jar
+
+# Java compiled files
 *.class
 *.jar
 *.war
+*.nar
 *.ear
+
+# JVM crash logs
 hs_err_pid*
 
-# 🛑 CRITICAL: Local Databases & Vaults (DO NOT COMMIT)
-# Prevents committing locked DBs and personal PDF resumes
-atlas-manager/src/main/resources/data/*.db
-atlas-manager/src/main/resources/data/*.json
-atlas-manager/src/main/resources/data/vault/
+# Spring logs
+manager/logs/
+manager/*.log
 
-# ==========================================
-# 🐍 WORKER: atlas-worker (Python / FastAPI)
-# ==========================================
-# Byte-compiled / optimized / DLL files
+# Local runtime data / DBs
+manager/src/main/resources/data/*.db
+manager/src/main/resources/data/*.sqlite
+manager/src/main/resources/data/*.json
+manager/src/main/resources/data/vault/
+
+# ==================================================
+# 🐍 CORE (FastAPI + LangGraph + Python)
+# Folder: /core
+# ==================================================
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual Environments
-atlas-worker/venv/
-atlas-worker/env/
-atlas-worker/.venv/
+# Virtual environments
+core/venv/
+core/.venv/
+core/env/
 
-# Tooling / Testing
-atlas-worker/.pytest_cache/
-atlas-worker/.mypy_cache/
-atlas-worker/.coverage
+# Python tooling
+core/.pytest_cache/
+core/.mypy_cache/
+core/.ruff_cache/
+core/.coverage
+core/htmlcov/
+
+# LangGraph / runtime generated files
+core/checkpoints/
+core/saves/
+core/**/*.db
+core/**/*.sqlite
+
+# Optional model caches
+core/.cache/
+core/models/
+core/.ollama/
+
+# FastAPI logs
+core/*.log
+
+# ==================================================
+# 📦 Archives / Generated Packages
+# ==================================================
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# ==================================================
+# 🚫 NEVER COMMIT THESE BY ACCIDENT
+# ==================================================
+*.pem
+*.key
+*.crt
+*.p12
+id_rsa
+id_ed25519
