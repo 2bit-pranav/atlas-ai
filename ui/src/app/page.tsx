@@ -9,7 +9,9 @@ type SidebarView =
   | "chat-history"
   | "browser-sessions"
   | "saved-memory"
-  | "integrations";
+  | "integrations"
+  | "startup-tasks"
+  | "skills";
 
 type ChatHistoryItem = {
   id: string;
@@ -331,6 +333,24 @@ export default function Home() {
           >
             Integrations
           </button>
+          <button
+            type="button"
+            className={`${styles.navItem} ${
+              activeView === "startup-tasks" ? styles.navItemActive : ""
+            }`}
+            onClick={() => setActiveView("startup-tasks")}
+          >
+            Startup Tasks
+          </button>
+          <button
+            type="button"
+            className={`${styles.navItem} ${
+              activeView === "skills" ? styles.navItemActive : ""
+            }`}
+            onClick={() => setActiveView("skills")}
+          >
+            Skills
+          </button>
         </nav>
       </aside>
 
@@ -594,11 +614,20 @@ export default function Home() {
           </div>
         )}
 
-        {(activeView === "saved-memory" || activeView === "integrations") && (
+        {(activeView === "saved-memory" ||
+          activeView === "integrations" ||
+          activeView === "startup-tasks" ||
+          activeView === "skills") && (
           <div className={styles.workspacePanel}>
             <div className={styles.blankCard}>
               <p className={styles.blankTitle}>
-                {activeView === "saved-memory" ? "Saved Documents" : "Integrations"}
+                {activeView === "saved-memory"
+                  ? "Saved Documents"
+                  : activeView === "integrations"
+                    ? "Integrations"
+                    : activeView === "startup-tasks"
+                      ? "Startup Tasks"
+                      : "Skills"}
               </p>
               <p className={styles.blankHint} />
             </div>
