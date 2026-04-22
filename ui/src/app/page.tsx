@@ -93,9 +93,11 @@ function TrashIcon() {
 }
 
 export default function Home() {
-  const { status, messages, terminalLogs, sendMessage: sendWebSocketMessage } = useAtlasWebSocket();
+  const { status, messages, terminalLogs, isWorking, sendMessage: sendWebSocketMessage } = useAtlasWebSocket();
   const [activeView, setActiveView] = useState<SidebarView>("new-chat");
   const [promptPhrase, setPromptPhrase] = useState(PROMPT_PHRASES[0]);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const isConnectionReady = status === "CONNECTED";
 
   const [chatHistory, setChatHistory] =
     useState<ChatHistoryItem[]>(INITIAL_CHAT_HISTORY);
@@ -254,6 +256,10 @@ export default function Home() {
   };
 
   const sendMessage = () => {
+    if (!isConnectionReady) {
+      return;
+    }
+
     if (!messageText.trim() && !attachedFiles.length) {
       return;
     }
@@ -267,7 +273,11 @@ export default function Home() {
   };
 
   return (
-    <div className={styles.shell}>
+    <div
+      className={`${styles.shell} ${
+        isTerminalOpen ? styles.shellTerminalOpen : styles.shellTerminalCollapsed
+      }`}
+    >
       <aside className={styles.sidebar}>
         <div className={styles.sidebarTop}>
           <p className={styles.brand}>Atlas</p>
@@ -326,13 +336,15 @@ export default function Home() {
 
       <section className={styles.centerPanel}>
         <div className={styles.statusBar}>
-          <span
-            className={`${styles.connectionBadge} ${
-              status === "CONNECTED" ? styles.connected : styles.notConnected
-            }`}
-          >
-            {status === "CONNECTED" ? "Connected" : "Not Connected"}
-          </span>
+          <div className={styles.statusLeft}>
+            <span
+              className={`${styles.connectionBadge} ${
+                isConnectionReady ? styles.connected : styles.notConnected
+              }`}
+            >
+              {isConnectionReady ? "Connected" : "Not Connected"}
+            </span>
+          </div>
         </div>
 
         {activeView === "new-chat" && (
@@ -356,6 +368,13 @@ export default function Home() {
                       {message.content}
                     </div>
                   ))}
+                  {isWorking && (
+                    <div className={`${styles.messageBubble} ${styles.agentBubble} ${styles.thinkingBubble}`}>
+                      <span className={styles.dot}>.</span>
+                      <span className={styles.dot}>.</span>
+                      <span className={styles.dot}>.</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -381,7 +400,6 @@ export default function Home() {
                 placeholder="Type a message"
                 value={messageText}
                 onChange={(event) => setMessageText(event.target.value)}
-                disabled={status !== "CONNECTED"}
               />
               <div className={styles.composerActions}>
                 <button
@@ -410,18 +428,10 @@ export default function Home() {
               <button
                 type="submit"
                 className={styles.sendButton}
-                disabled={status !== "CONNECTED"}
               >
                 Send
               </button>
             </form>
-            {terminalLogs.length > 0 && (
-              <div className="bg-black text-green-400 font-mono text-xs overflow-y-auto h-32 p-2 mt-4 rounded">
-                {terminalLogs.map((log, i) => (
-                  <div key={i}>{log}</div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
@@ -596,8 +606,32 @@ export default function Home() {
         )}
       </section>
 
-      <aside className={styles.rightPanel}>
-        <p className={styles.terminalTitle}>Terminal</p>
+      <aside
+        className={`${styles.rightPanel} ${
+          isTerminalOpen ? styles.rightPanelOpen : styles.rightPanelCollapsed
+        }`}
+      >
+        <button
+          type="button"
+          className={styles.terminalRailButton}
+          onClick={() => setIsTerminalOpen((current) => !current)}
+          aria-label={isTerminalOpen ? "Collapse terminal" : "Expand terminal"}
+        >
+          {isTerminalOpen ? ">" : "<"}
+        </button>
+
+        {isTerminalOpen && (
+          <div className={styles.terminalContent}>
+            <p className={styles.terminalTitle}>Terminal</p>
+            <div className={styles.terminalBody}>
+              {terminalLogs.length === 0 ? (
+                <span className={styles.terminalPlaceholder}>Waiting for logs...</span>
+              ) : (
+                terminalLogs.map((log, i) => <div key={i}>{log}</div>)
+              )}
+            </div>
+          </div>
+        )}
       </aside>
     </div>
   );

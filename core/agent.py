@@ -38,7 +38,8 @@ embeddings = OllamaEmbeddings(model="nomic-embed-text")
 
 def memfetch_node(state: AgentState):
     """Fetches from local FAISS if missing"""
-    print(f"[Memory] Searching memory...")
+    msg = "[Memory] Searching memory..."
+    print(msg)
     user_query = state["messages"][-1].content
 
     facts = factual.get_profile()
@@ -46,6 +47,7 @@ def memfetch_node(state: AgentState):
     episodic_context = episodic.search_past_experiences(user_query)
 
     return {
+        "logs": [msg] if "logs" not in state else state["logs"] + [msg],
         "factual_memory": facts,
         "semantic_memory": semantic_context,
         "episodic_memory": episodic_context,
@@ -55,14 +57,12 @@ def memfetch_node(state: AgentState):
 
 def planner_node(state: AgentState):
     """Plans steps and identifies required toolsets"""
-    print(f"[Planner] Drafting plan and toolsets...")
-
+    msg = "[Planner] Drafting plan and toolsets..."
+    print(msg)
     recent_msgs = state["messages"][-4:]
     
-    # 1. 🚨 FIX: Fetch the facts so the Planner knows the identity is safe to process
     facts = state.get("factual_memory", {})
 
-    # 2. 🚨 FIX: Inject the facts into the Planner's prompt
     sys_prompt = f"""
     You are the Strategic Planning Engine for Atlas, an autonomous browser agent.
 
@@ -190,15 +190,12 @@ def planner_node(state: AgentState):
     TOOLS: <UPPERCASE, comma-separated toolkit names only>
     """
 
-    # 3. 🚨 FIX: Put the System prompt FIRST. 
-    # Add a final "hammer" prompt at the very end to guarantee it stays in character.
     planner_messages = [SystemMessage(content=sys_prompt)] + recent_msgs + [
         SystemMessage(content="CRITICAL REMINDER: You are the PLANNER. Do NOT converse with the user. You MUST output EXACTLY 'PLAN: <text>\nTOOLS: <categories>' and nothing else.")
     ]
 
     response_content = executor_llm.invoke(planner_messages).content
 
-    # Flatten Gemini's multimodal response list for the Planner
     if isinstance(response_content, list):
         plan_raw_text = "".join(
             block["text"] if isinstance(block, dict) and "text" in block else str(block) 
@@ -216,12 +213,12 @@ def planner_node(state: AgentState):
         tools_str = parts[1].strip()
         toolkits = [t.strip() for t in tools_str.split(",") if t.strip() and t.strip() != "NONE"]
 
-    return {"plan": plan_text, "active_toolkits": toolkits}
+    return {"plan": plan_text, "active_toolkits": toolkits, "logs": [msg] if "logs" not in state else state["logs"] + [msg]}
 
 def executor_node(state: AgentState):
     """Executes the plan and calls tools as needed"""
-    print(f"[Atlas] Evaluating next steps...")
-
+    msg1 = "[Atlas] Evaluating next steps..."
+    print(msg1)
     facts = state.get("factual_memory", {})
     plan = state.get("plan", "No active plan.")
 
@@ -366,13 +363,13 @@ def executor_node(state: AgentState):
     active_tools = []
     requested_kits = state.get("active_toolkits", ["MEMORY"])
 
-    print(f"[Atlas] Loaded Toolkits: {requested_kits}")
+    msg2 = f"[Atlas] Loaded Toolkits: {requested_kits}"
+    print(msg2)
     
     for kit in requested_kits:
         if kit in TOOL_GROUPS:
             active_tools.extend(TOOL_GROUPS[kit])
             
-    # 🚨 FIX: Conversational Bypass. Only bind tools if Planner actually requested them.
     if active_tools:
         active_llm = executor_llm.bind_tools(active_tools)
     else:
@@ -380,10 +377,12 @@ def executor_node(state: AgentState):
 
     response = active_llm.invoke(trimmed_msgs)
 
-    # 🚨 FIX: Increment step count HERE, not in the router.
     current_steps = state.get("step_count", 0)
+    
+    logs = state.get("logs", [])
+    logs.extend([msg1, msg2])
 
-    return {"messages": [response], "step_count": current_steps + 1}
+    return {"messages": [response], "step_count": current_steps + 1, "logs": logs}
 
 
 def speaker_node(state: AgentState):
@@ -478,7 +477,7 @@ def speaker_node(state: AgentState):
         => Let me pull up what we saved earlier.
 
         fill_form
-        => I’m filling that form now.
+        => I'm filling that form now.
 
         submit_form
         => Submitting it now.
@@ -508,7 +507,10 @@ def speaker_node(state: AgentState):
 
 def memwrite_node(state: AgentState):
     """Runs before END and updates memory"""
-    print(f"[Memory] Reviewing conversation for updates...")
+    msg1 = "[Memory] Reviewing conversation for updates..."
+    print(msg1)
+    logs = state.get("logs", [])
+    logs.append(msg1)
 
     # factual write
     last_user_msg = next((m for m in reversed(state["messages"]) if m.type == "human"), None)
@@ -551,9 +553,12 @@ def memwrite_node(state: AgentState):
     # episodic write
     if state.get("plan"):
         user_query = state["messages"][0].content
-        episodic.log_experience(user_query, state["plan"])
+        msg2 = "[Memory] Logged experience in episodic memory"
+        print(msg2)
+        episodic.log_experience(user_query, state.get("plan", ""))
+        logs.append(msg2)
 
-    return {}
+    return {"logs": logs}
 
 
 def executor_router(state: AgentState):

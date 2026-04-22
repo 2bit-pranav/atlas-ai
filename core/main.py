@@ -50,7 +50,25 @@ async def atlas_api(inputs: AtlasInput, config: RunnableConfig):
     config["configurable"] = {"thread_id": SESSION_ID}
 
     async for event in atlas_graph.astream(state, config=config, stream_mode="values"):
-        yield event
+        clean_messages = []
+        for m in event.get("messages", []):
+            content_str = m.content
+            if isinstance(content_str, list):
+                content_str = "".join(
+                    b.get("text", "") if isinstance(b, dict) else str(b) 
+                    for b in content_str
+                )
+            
+            clean_messages.append({
+                "type": m.type,
+                "content": content_str,
+                "id": m.id if hasattr(m, "id") else ""
+            })
+
+        yield {
+            "messages": clean_messages,
+            "logs": event.get("logs", [])
+        }
 
 atlas_api = atlas_api.with_types(input_type=AtlasInput)
 
@@ -68,7 +86,6 @@ if __name__ == "__main__":
     import asyncio
     import sys
 
-    # 1. Set the policy for the main thread
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 

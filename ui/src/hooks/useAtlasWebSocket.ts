@@ -15,6 +15,7 @@ export function useAtlasWebSocket(url: string = 'http://localhost:8080/atlas-ws'
   const [status, setStatus] = useState<ConnectionStatus>('CONNECTING');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+  const [isWorking, setIsWorking] = useState<boolean>(false);
   
   // We use a ref to store the client instance so it persists across renders
   const clientRef = useRef<Client | null>(null);
@@ -30,6 +31,10 @@ export function useAtlasWebSocket(url: string = 'http://localhost:8080/atlas-ws'
         // Subscribe to AI chat responses
         client.subscribe('/topic/responses', (message) => {
           const chunk = message.body;
+          if (chunk === '[DONE]') {
+             setIsWorking(false);
+             return;
+          }
           setMessages((prev) => {
             if (prev.length === 0) return [{ role: 'ai', content: chunk }];
             
@@ -81,6 +86,7 @@ export function useAtlasWebSocket(url: string = 'http://localhost:8080/atlas-ws'
 
     // Optimistically add user message locally
     setMessages((prev) => [...prev, { role: 'user', content: text }]);
+    setIsWorking(true);
 
     // Publish execution command to backend
     if (clientRef.current && clientRef.current.connected) {
@@ -97,6 +103,7 @@ export function useAtlasWebSocket(url: string = 'http://localhost:8080/atlas-ws'
     status,
     messages,
     terminalLogs,
+    isWorking,
     sendMessage,
   };
 }

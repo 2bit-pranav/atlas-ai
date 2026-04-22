@@ -14,3 +14,4 @@ class AgentState(TypedDict):
     step_count: NotRequired[int]
     active_url: NotRequired[str]
     missing_info: NotRequired[str]
+    logs: NotRequired[list[str]]
