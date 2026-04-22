@@ -5,12 +5,13 @@ from langchain_core.runnables import chain, RunnableConfig
 from pydantic import BaseModel, Field
 from typing import Any
 import uuid
+from contextlib import asynccontextmanager
+from browser.manager import BrowserManager
 
 from agent import get_atlas_graph
 
 class AtlasInput(BaseModel):
     message: str = Field(..., description="The message you want to send to Atlas.")
-
 
 def _normalize_inputs(inputs: AtlasInput | dict[str, Any]) -> AtlasInput:
     if isinstance(inputs, AtlasInput):
@@ -30,6 +31,17 @@ def prepare_state(inputs: AtlasInput | dict[str, Any]) -> dict:
 
 SESSION_ID = str(uuid.uuid4())
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup: do nothing
+
+    yield
+    
+    # gracefully shutdown the active browser instance on exit
+    if BrowserManager._instance is not None:
+        print("Saving browser state and closing Playwright...")
+        await BrowserManager._instance.close()
+
 @chain
 async def atlas_api(inputs: AtlasInput, config: RunnableConfig):
     state = prepare_state(inputs)
@@ -46,12 +58,25 @@ app = FastAPI(
     title="Atlas Browser Agent",
     version="0.1",
     description="The local LangGraph backend for Atlas.",
+    lifespan=lifespan
 )
 
 add_routes(app, atlas_api, path="/atlas")
 
 if __name__ == "__main__":
     import uvicorn
+    import asyncio
+    import sys
+
+    # 1. Set the policy for the main thread
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
     print("Booting Atlas Dev Server")
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    
+    uvicorn.run(
+        "main:app", 
+        host="127.0.0.1", 
+        port=8000, 
+        loop="asyncio" 
+    )

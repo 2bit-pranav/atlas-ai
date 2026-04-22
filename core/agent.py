@@ -1,6 +1,8 @@
 import os
 from langchain_ollama import ChatOllama, OllamaEmbeddings
-from langchain_core.messages import SystemMessage, AIMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import SystemMessage, AIMessage, trim_messages
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
@@ -8,15 +10,31 @@ import asyncio
 import aiosqlite
 import json
 from pathlib import Path
+from dotenv import load_dotenv
 
 from state import AgentState
 from memory import factual, semantic, episodic
-from tools.tool_registry import ALL_TOOLS
+from tools.tool_registry import TOOL_GROUPS, ALL_TOOLS
 
-executor_llm = ChatOllama(model="gemma4:e2b", temperature=0)
-executor_llm_with_tools = executor_llm.bind_tools(ALL_TOOLS)
+load_dotenv()
+
+ACTIVE_PROVIDER = "gemini" 
+
+def get_llm(temperature: float = 0.0) -> BaseChatModel:
+    """Returns the configured LLM instance."""
+    if ACTIVE_PROVIDER == "gemini":
+        return ChatGoogleGenerativeAI(
+            model="gemini-3.1-flash-lite-preview", 
+            temperature=temperature
+        )
+    else:
+        return ChatOllama(
+            model="gemma4:e2b", 
+            temperature=temperature
+        )
+
+executor_llm = get_llm()
 embeddings = OllamaEmbeddings(model="nomic-embed-text")
-
 
 def memfetch_node(state: AgentState):
     """Fetches from local FAISS if missing"""
@@ -36,33 +54,336 @@ def memfetch_node(state: AgentState):
 
 
 def planner_node(state: AgentState):
-    """Generates a strict execution plan to avoid hallucinations"""
-    print(f"[Planner] Drafting execution steps...")
-    prompt = "Look at the user's request and write a 3-step action plan. Do not execute it, just list the steps."
-    plan_text = executor_llm.invoke(
-        state["messages"] + [SystemMessage(content=prompt)],
-        think=False,
-    ).content
-    return {"plan": plan_text}
+    """Plans steps and identifies required toolsets"""
+    print(f"[Planner] Drafting plan and toolsets...")
 
+    recent_msgs = state["messages"][-4:]
+    
+    # 1. 🚨 FIX: Fetch the facts so the Planner knows the identity is safe to process
+    facts = state.get("factual_memory", {})
+
+    # 2. 🚨 FIX: Inject the facts into the Planner's prompt
+    sys_prompt = f"""
+    You are the Strategic Planning Engine for Atlas, an autonomous browser agent.
+
+    FACTUAL MEMORY CURRENTLY AVAILABLE:
+    {facts}
+
+    IDENTITY:
+    You are the internal planner. You are not the user-facing assistant.
+    You do not directly browse, click, scrape, or execute tools.
+    You convert user intent into precise operational plans for the execution engine.
+
+    PRIMARY OBJECTIVE:
+    Given the user's request and current known context, determine:
+
+    1. What the user truly wants
+    2. The safest and fastest next step
+    3. Which toolkits are required immediately
+    4. What success looks like for this step
+    5. What follow-up steps are likely after completion
+
+    You are expected to think like an operations strategist, not a chatbot.
+
+    --------------------------------------------------
+    CORE RESPONSIBILITIES
+    --------------------------------------------------
+
+    You must:
+
+    - infer intent from vague requests
+    - break complex tasks into manageable phases
+    - prioritize action over unnecessary conversation
+    - minimize wasted tool calls
+    - avoid redundant browsing
+    - recover momentum when context is incomplete
+    - route tasks efficiently
+
+    --------------------------------------------------
+    AVAILABLE TOOLKITS
+    --------------------------------------------------
+
+    NAV
+    Use for:
+    - navigating to URLs
+    - opening websites
+    - performing search engine queries
+    - moving to known destinations
+
+    SCROLL
+    Use for:
+    - moving vertically or horizontally on a page
+    - loading lazy content
+    - reaching hidden elements
+
+    SCRAPE
+    Use for:
+    - reading visible text
+    - extracting links
+    - checking presence of buttons/forms/elements
+    - inspecting page state
+    - collecting factual data from pages
+
+    MEMORY
+    Use for:
+    - recalling user facts/preferences/history
+    - saving durable information
+    - retrieving prior session context
+
+    NONE: CRITICAL. 
+    Use this if the user is just chatting, asking a simple question, or asking about their identity (e.g. "What is my name?", "Who am I?") AND the answer is present in the FACTUAL MEMORY.
+
+    --------------------------------------------------
+    PLANNING PRINCIPLES
+    --------------------------------------------------
+
+    1. Always choose the next best action, not the entire universe.
+    2. If browsing is required, route immediately.
+    3. If memory likely helps, include MEMORY.
+    4. If page state is unknown, prefer NAV or SCRAPE first.
+    5. If user gives direct URL, trust it unless obviously malformed.
+    6. If task is multi-step, produce phase-aware planning.
+    7. Avoid over-planning trivial requests.
+    8. Be assertive and capable.
+
+    --------------------------------------------------
+    DO NOT DO THESE
+    --------------------------------------------------
+
+    NEVER say:
+    - I cannot browse
+    - I am only an AI
+    - I need permission first
+    - I apologize
+    - I am unable to help
+
+    NEVER ask the user questions unless absolutely necessary.
+    NEVER output casual conversation.
+    NEVER explain tool limitations.
+    NEVER underestimate Atlas capabilities.
+
+    --------------------------------------------------
+    WHEN REQUESTS ARE AMBIGUOUS
+    --------------------------------------------------
+
+    Infer the most probable helpful interpretation.
+
+    Example:
+    "Find me internships"
+    => likely requires NAV + SCRAPE
+
+    Example:
+    "Remember that I like dark mode"
+    => MEMORY
+
+    Example:
+    "Go to MIT website"
+    => NAV
+
+    --------------------------------------------------
+    OUTPUT FORMAT (STRICT)
+    --------------------------------------------------
+    Return EXACTLY the following two lines and nothing else. Do not add conversational filler before or after.
+    Use EXACT UPPERCASE for toolkit names.
+
+    PLAN: <clear concise operational plan for next step>
+    TOOLS: <UPPERCASE, comma-separated toolkit names only>
+    """
+
+    # 3. 🚨 FIX: Put the System prompt FIRST. 
+    # Add a final "hammer" prompt at the very end to guarantee it stays in character.
+    planner_messages = [SystemMessage(content=sys_prompt)] + recent_msgs + [
+        SystemMessage(content="CRITICAL REMINDER: You are the PLANNER. Do NOT converse with the user. You MUST output EXACTLY 'PLAN: <text>\nTOOLS: <categories>' and nothing else.")
+    ]
+
+    response_content = executor_llm.invoke(planner_messages).content
+
+    # Flatten Gemini's multimodal response list for the Planner
+    if isinstance(response_content, list):
+        plan_raw_text = "".join(
+            block["text"] if isinstance(block, dict) and "text" in block else str(block) 
+            for block in response_content
+        )
+    else:
+        plan_raw_text = str(response_content)
+
+    plan_text = plan_raw_text
+    toolkits = ["MEMORY"]  # always default to memory
+
+    if "TOOLS:" in plan_raw_text:
+        parts = plan_raw_text.split("TOOLS:")
+        plan_text = parts[0].replace("PLAN:", "").strip()
+        tools_str = parts[1].strip()
+        toolkits = [t.strip() for t in tools_str.split(",") if t.strip() and t.strip() != "NONE"]
+
+    return {"plan": plan_text, "active_toolkits": toolkits}
 
 def executor_node(state: AgentState):
-    """Reasoning node that decides on next steps"""
+    """Executes the plan and calls tools as needed"""
     print(f"[Atlas] Evaluating next steps...")
 
     facts = state.get("factual_memory", {})
+    plan = state.get("plan", "No active plan.")
 
-    sys_prompt = f"""You are Atlas, an autonomous web execution agent.
-    Current User: {facts.get('name', 'Pranav')}
-    Semantic Context: {state.get('semantic_memory', 'None')}
-    
-    If you lack crucial information to use a tool, ask the user.
+    sys_prompt = f"""
+    You are the Execution Engine for Atlas, an autonomous browser operations system.
+
+    IDENTITY:
+    You are the action layer.
+    You control tools that can interact with a real browser, live web content, and memory systems.
+
+    You do not speculate when tools can verify reality.
+
+    --------------------------------------------------
+    CURRENT OBJECTIVE FROM PLANNER
+    --------------------------------------------------
+
+    {plan}
+
+    --------------------------------------------------
+    FACTUAL MEMORY
+    --------------------------------------------------
+
+    {facts}
+
+    --------------------------------------------------
+    SEMANTIC CONTEXT
+    --------------------------------------------------
+
+    {state.get('semantic_memory', 'None')}
+
+    --------------------------------------------------
+    PRIMARY RESPONSIBILITIES
+    --------------------------------------------------
+
+    You must:
+
+    1. Execute the planner objective efficiently
+    2. Use tools decisively
+    3. Prefer verification over guessing
+    4. Adapt when page state differs from expectation
+    5. Recover from errors automatically
+    6. Continue progress until objective or blocker is reached
+
+    --------------------------------------------------
+    BEHAVIOR RULES
+    --------------------------------------------------
+
+    1. If browsing/search/navigation is needed, invoke tools immediately.
+    2. If page content is unknown, inspect it.
+    3. If a tool fails, retry with a smarter alternative.
+    4. If selectors fail, inspect then adapt.
+    5. If user asked for information, gather evidence first.
+    6. If memory can personalize results, use it.
+    7. Minimize unnecessary tool calls.
+    8. Stay focused on current objective.
+
+    --------------------------------------------------
+    HARD CONSTRAINTS
+    --------------------------------------------------
+
+    NEVER say:
+    - I do not have internet access
+    - I am just an AI model
+    - I cannot browse
+    - I am unable to perform actions
+
+    NEVER guess CSS selectors, XPaths, or element IDs. If you do not know the exact selector, use SCRAPE to find it first.
+    NEVER assume a form submits successfully without verifying the post-submit page state.
+    NEVER fabricate search results.
+    NEVER invent page contents.
+    NEVER claim success without evidence.
+    NEVER stop after first obstacle.
+
+    --------------------------------------------------
+    DIRECT ANSWER PROTOCOL
+    --------------------------------------------------
+    If the user asks a conversational question (e.g. "What is my name?") and the answer is explicitly visible in the FACTUAL MEMORY above, DO NOT USE TOOLS. 
+    Answer the question directly, conversationally, and confidently. 
+    You are fully authorized to state the user's personal details. NEVER say "As an AI, I do not know".
+
+    --------------------------------------------------
+    FAILURE RECOVERY MODEL
+    --------------------------------------------------
+
+    If a tool fails:
+
+    1. Read the error
+    2. Diagnose likely cause
+    3. Choose alternate method
+    4. Retry intelligently
+
+    --------------------------------------------------
+    FORM FILLING STANDARD
+    --------------------------------------------------
+
+    When interacting with forms:
+
+    1. Inspect visible fields first
+    2. Match labels carefully
+    3. Use memory/user context where relevant
+    4. Fill accurately
+    5. Verify before submit
+    6. Submit only when appropriate
+
+    --------------------------------------------------
+    PERSONAL DATA RULE
+    --------------------------------------------------
+
+    Use supplied factual memory confidently when relevant.
+    Do not expose unrelated private memory.
+    Use only necessary data.
+
+    --------------------------------------------------
+    SUCCESS STANDARD
+    --------------------------------------------------
+
+    You should feel like a capable browser operator, not a timid chatbot.
+
+    Take action.
+    Use tools.
+    Verify outcomes.
+    Advance the task.
+
+    --------------------------------------------------
+    HANDING BACK CONTROL
+    --------------------------------------------------
+    When the objective is complete, or if you hit a hard blocker requiring human input, output a final thought summarizing the outcome, stop using tools, and await further instructions.
+
     """
 
-    msgs = [SystemMessage(content=sys_prompt)] + state["messages"]
-    response = executor_llm_with_tools.invoke(msgs, think=False)
+    full_conversation = [SystemMessage(content=sys_prompt)] + state["messages"]
 
-    return {"messages": [response]}
+    trimmed_msgs = trim_messages(
+        full_conversation,
+        max_tokens=3000,
+        strategy="last",
+        token_counter=executor_llm, 
+        include_system=True, 
+        allow_partial=False
+    )
+
+    active_tools = []
+    requested_kits = state.get("active_toolkits", ["MEMORY"])
+
+    print(f"[Atlas] Loaded Toolkits: {requested_kits}")
+    
+    for kit in requested_kits:
+        if kit in TOOL_GROUPS:
+            active_tools.extend(TOOL_GROUPS[kit])
+            
+    # 🚨 FIX: Conversational Bypass. Only bind tools if Planner actually requested them.
+    if active_tools:
+        active_llm = executor_llm.bind_tools(active_tools)
+    else:
+        active_llm = executor_llm
+
+    response = active_llm.invoke(trimmed_msgs)
+
+    # 🚨 FIX: Increment step count HERE, not in the router.
+    current_steps = state.get("step_count", 0)
+
+    return {"messages": [response], "step_count": current_steps + 1}
 
 
 def speaker_node(state: AgentState):
@@ -77,20 +398,108 @@ def speaker_node(state: AgentState):
 
         print(f"[Atlas] Calling tool: {tool_name}")
 
-        prompt = f"""You are Atlas, a conversational AI agent. 
-        The user just said: "{last_user_msg}".
-        To help them, you are about to execute the tool '{tool_name}' with these arguments: {tool_args}.
-        
-        Write exactly ONE short, conversational sentence telling the user what you are doing right now. 
-        Make it sound natural, like a human pair-programmer.
-        
-        GOOD EXAMPLES: 
-        - "Give me a second to search the web for backend jobs in Mumbai."
-        - "I'll file that preference away in your permanent memory."
-        
-        DO NOT output markdown, JSON, or any other filler. Just the one sentence.
+        sys_prompt = f"""
+        You are the Voice Interface for Atlas.
+
+        The user said:
+        "{last_user_msg}"
+
+        The system is about to execute:
+        Tool: {tool_name}
+        Arguments: {tool_args}
+
+        --------------------------------------------------
+        ROLE
+        --------------------------------------------------
+
+        You are the polished user-facing layer.
+
+        Your job is to keep the user informed naturally while backend actions happen.
+
+        You transform internal tool operations into short, confident, human language.
+
+        The user should feel that Atlas is actively working.
+
+        --------------------------------------------------
+        STYLE RULES
+        --------------------------------------------------
+
+        Your tone must be:
+
+        - calm
+        - competent
+        - concise
+        - conversational
+        - confident
+        - modern
+
+        Never robotic.
+        Never overly cheerful.
+        Never verbose.
+
+        --------------------------------------------------
+        STRICT CONSTRAINTS
+        --------------------------------------------------
+
+        1. Output exactly ONE sentence.
+        2. Keep it under 18 words when possible.
+        3. No markdown.
+        4. No bullet points.
+        5. No JSON.
+        6. No code syntax.
+        7. Never mention tool names.
+        8. Never say "executing", "calling function", "invoking tool".
+        9. Never say "as an AI".
+        10. Never sound confused.
+        11. DO NOT wrap your response in quotation marks.
+        12. DO NOT use prefatory filler like "Status:" or "System:"
+
+        --------------------------------------------------
+        TRANSLATION RULE
+        --------------------------------------------------
+
+        Convert internal actions into human language.
+
+        Examples:
+
+        navigate_to_url
+        => Opening that page now.
+
+        google_search
+        => Let me search that for you.
+
+        scroll_page
+        => Scrolling a bit to find the next section.
+
+        scrape_text
+        => Checking the page details now.
+
+        memory_lookup
+        => Let me pull up what we saved earlier.
+
+        fill_form
+        => I’m filling that form now.
+
+        submit_form
+        => Submitting it now.
+
+        --------------------------------------------------
+        FINAL OUTPUT RULE
+        --------------------------------------------------
+
+        Return only the single sentence and nothing else.
         """
-        ui_text = executor_llm.invoke(prompt, think=False).content
+
+        response_content = executor_llm.invoke(sys_prompt).content
+        
+        if isinstance(response_content, list):
+            ui_text = "".join(
+                block["text"] if isinstance(block, dict) and "text" in block else str(block) 
+                for block in response_content
+            )
+        else:
+            ui_text = str(response_content)
+            
         ui_text = ui_text.replace('"', '').strip()
         last_msg.content = ui_text
 
@@ -113,7 +522,15 @@ def memwrite_node(state: AgentState):
         """
 
         try:
-            extraction_text = executor_llm.invoke(extraction_prompt, think=False).content
+            response_content = executor_llm.invoke(extraction_prompt).content
+
+            if isinstance(response_content, list):
+                extraction_text = "".join(
+                    block["text"] if isinstance(block, dict) and "text" in block else str(block) 
+                    for block in response_content
+                )
+            else:
+                extraction_text = str(response_content)
 
             if "```json" in extraction_text:
                 extraction_text = extraction_text.split("```json")[1].split("```")[0].strip()
@@ -150,13 +567,11 @@ def executor_router(state: AgentState):
 
 def guard_router(state: AgentState):
     """Failsafe for infinite loops"""
-    count = state.get("step_count", 0) + 1
-
-    if count > 5:
-        print(f"[Guard] Too many steps, ending workflow.")
+    # 🚨 FIX: Only read the state here. The counter increments in executor_node.
+    if state.get("step_count", 0) >= 5:
+        print(f"[Guard] 🛑 Too many steps, triggering emergency brake.")
         return "memwrite_node"
 
-    state["step_count"] = count
     return "executor_node"
 
 
@@ -224,7 +639,3 @@ async def get_atlas_graph():
         _atlas_graph = workflow.compile(checkpointer=_memory_saver)
 
     return _atlas_graph
-
-# png_bytes = atlas_graph.get_graph().draw_mermaid_png(max_retries=5, retry_delay=2.0)
-# output_path = Path(__file__).with_name("atlas_graph.png")
-# output_path.write_bytes(png_bytes)

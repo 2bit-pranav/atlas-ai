@@ -2,7 +2,7 @@ import os
 import json
 from typing import Any
 
-FACTS_FILE = "saves/atlas_factual_memory.json"
+FACTS_FILE = "../saves/atlas_factual_memory.json"
 
 def _load_facts() -> dict:
     if not os.path.exists(FACTS_FILE):

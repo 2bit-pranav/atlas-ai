@@ -2,7 +2,7 @@ import os
 from langchain_community.vectorstores import FAISS
 from langchain_ollama import OllamaEmbeddings
 
-EPISODIC_INDEX_FILE = "saves/atlas_episodic_memory"
+EPISODIC_INDEX_FILE = "../saves/atlas_episodic_memory"
 embeddings = OllamaEmbeddings(model="nomic-embed-text")
 
 def _get_db():
